@@ -6,7 +6,7 @@
     html, body {
       margin:0; padding:0; height:100%; width:100%; overflow:hidden; background:black; font-family:sans-serif;
     }
-    video {
+    iframe, video {
       position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0;
     }
     #prompt {
@@ -29,15 +29,15 @@
   </style>
 </head>
 <body>
-  <video id="vid" playsinline>
-    <source src="https://streamable.com/qdxwfr" type="video/mp4">
-  </video>
+  <div id="videoContainer">
+    <iframe id="startVideo" src="https://streamable.com/e/qdxwfr" frameborder="0" allowfullscreen></iframe>
+    <video id="failVideo" src="fail.mp4" style="display:none;" playsinline></video>
+  </div>
 
   <div id="prompt"></div>
   <button id="fullscreenBtn">Go Fullscreen to Start</button>
   <button id="retryBtn" style="display:none;">Retry</button>
 
-  <!-- Mobile buttons -->
   <div id="mobileButtons">
     <button class="mobileBtn" data-key="z">Z</button>
     <button class="mobileBtn" data-key="c">C</button>
@@ -48,14 +48,15 @@
   </div>
 
   <script>
-    const video = document.getElementById("vid");
     const prompt = document.getElementById("prompt");
     const fullscreenBtn = document.getElementById("fullscreenBtn");
     const retryBtn = document.getElementById("retryBtn");
+    const failVideo = document.getElementById("failVideo");
+    const startVideo = document.getElementById("startVideo");
     const mobileButtons = document.getElementById("mobileButtons");
 
     const sequence = [
-      {key:"z", delay:0, pause:10000},   // first key pause 10s
+      {key:"z", delay:0, pause:10000},
       {key:"c", delay:2000, pause:2000},
       {key:"x", delay:2000, pause:2000},
       {key:"l", delay:5000, pause:2000},
@@ -70,14 +71,12 @@
     let step = 0;
     let active = false;
 
-    // Detect mobile
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile) mobileButtons.style.display = "block";
 
     function showPrompt() {
       if (step >= sequence.length) return;
       active = true;
-      video.pause();
       prompt.textContent = "Press " + sequence[step].key.toUpperCase() + "!";
       setTimeout(() => { if (active) fail(); }, sequence[step].pause);
     }
@@ -85,8 +84,9 @@
     function fail() {
       active = false;
       prompt.textContent = "Failed!";
-      video.src = "fail.mp4"; // local fail video
-      video.play();
+      startVideo.style.display = "none";
+      failVideo.style.display = "block";
+      failVideo.play();
       retryBtn.style.display = "inline-block";
     }
 
@@ -96,15 +96,16 @@
         active = false;
         prompt.textContent = "";
         step++;
-        video.play();
         if (step < sequence.length) {
           setTimeout(showPrompt, sequence[step].delay);
+        } else {
+          prompt.textContent = "Success! YOU WON!";
+          retryBtn.style.display = "inline-block";
         }
       } else fail();
     }
 
     document.addEventListener("keydown", e => handleKey(e.key));
-
     mobileButtons.querySelectorAll(".mobileBtn").forEach(btn => {
       btn.addEventListener("click", () => handleKey(btn.dataset.key));
     });
@@ -114,27 +115,16 @@
       active = false;
       retryBtn.style.display = "none";
       fullscreenBtn.style.display = "none";
+      failVideo.style.display = "none";
+      startVideo.style.display = "block";
       prompt.textContent = "";
 
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen();
-      } else if (document.documentElement.webkitRequestFullscreen) { 
-        document.documentElement.webkitRequestFullscreen();
-      } else if (document.documentElement.msRequestFullscreen) { 
-        document.documentElement.msRequestFullscreen();
       }
 
-      video.src = "https://streamable.com/qdxwfr";
-      video.play();
       setTimeout(showPrompt, sequence[0].delay);
     }
-
-    video.addEventListener("ended", () => {
-      if (step >= sequence.length) {
-        prompt.textContent = "Success! YOU WON!";
-        retryBtn.style.display = "inline-block";
-      }
-    });
 
     fullscreenBtn.addEventListener("click", startGame);
     retryBtn.addEventListener("click", startGame);
