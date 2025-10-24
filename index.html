@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>QTE Demo</title>
+  <title>QTE Game</title>
   <style>
     html, body {
       margin:0; padding:0; height:100%; width:100%; overflow:hidden; background:black; font-family:sans-serif;
@@ -21,7 +21,7 @@
     }
     #mobileButtons {
       position:absolute; bottom:20%; width:100%; text-align:center; z-index:1;
-      display:none; /* only for mobile */
+      display:none;
     }
     .mobileBtn {
       font-size:32px; margin:5px; padding:15px 25px;
@@ -29,9 +29,10 @@
   </style>
 </head>
 <body>
-  <video id="vid">
-    <source src="https://drive.google.com/file/d/1Ssar8qvGdo2bEAO4DOJ0wM0dc5Q-HMRt/view?usp=drive_link">
+  <video id="vid" playsinline>
+    <source src="https://streamable.com/qdxwfr" type="video/mp4">
   </video>
+
   <div id="prompt"></div>
   <button id="fullscreenBtn">Go Fullscreen to Start</button>
   <button id="retryBtn" style="display:none;">Retry</button>
@@ -54,7 +55,7 @@
     const mobileButtons = document.getElementById("mobileButtons");
 
     const sequence = [
-      {key:"z", delay:0, pause:10000},  // first key pause 10s
+      {key:"z", delay:0, pause:10000},   // first key pause 10s
       {key:"c", delay:2000, pause:2000},
       {key:"x", delay:2000, pause:2000},
       {key:"l", delay:5000, pause:2000},
@@ -75,20 +76,16 @@
 
     function showPrompt() {
       if (step >= sequence.length) return;
-
       active = true;
-      video.pause(); 
+      video.pause();
       prompt.textContent = "Press " + sequence[step].key.toUpperCase() + "!";
-
-      setTimeout(() => {
-        if (active) fail();
-      }, sequence[step].pause);
+      setTimeout(() => { if (active) fail(); }, sequence[step].pause);
     }
 
     function fail() {
       active = false;
       prompt.textContent = "Failed!";
-      video.src = "fail.mp4"; // local file
+      video.src = "fail.mp4"; // local fail video
       video.play();
       retryBtn.style.display = "inline-block";
     }
@@ -100,17 +97,14 @@
         prompt.textContent = "";
         step++;
         video.play();
-
         if (step < sequence.length) {
           setTimeout(showPrompt, sequence[step].delay);
         }
       } else fail();
     }
 
-    // Keyboard for PC
     document.addEventListener("keydown", e => handleKey(e.key));
 
-    // Mobile buttons
     mobileButtons.querySelectorAll(".mobileBtn").forEach(btn => {
       btn.addEventListener("click", () => handleKey(btn.dataset.key));
     });
@@ -122,7 +116,6 @@
       fullscreenBtn.style.display = "none";
       prompt.textContent = "";
 
-      // request fullscreen
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen();
       } else if (document.documentElement.webkitRequestFullscreen) { 
@@ -131,8 +124,7 @@
         document.documentElement.msRequestFullscreen();
       }
 
-      // Load start video from Google Drive
-      video.src = "https://drive.google.com/file/d/1Ssar8qvGdo2bEAO4DOJ0wM0dc5Q-HMRt/view?usp=drive_link";
+      video.src = "https://streamable.com/qdxwfr";
       video.play();
       setTimeout(showPrompt, sequence[0].delay);
     }
